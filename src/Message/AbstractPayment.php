@@ -30,7 +30,7 @@ abstract class AbstractPayment extends AbstractRequest
         $cardBrand = $this->getCard()->getBrand();
         if (!array_key_exists($cardBrand, $this->allowedCardBrands)) {
             throw new InvalidCreditCardException('Kart geçerli değil, sadece Visa ya da MasterCard kullanılabilir');
-        } 
+        }
 
         $data = array();
         $data['pan'] = $this->getCard()->getNumber();
@@ -48,10 +48,9 @@ abstract class AbstractPayment extends AbstractRequest
         $data['storetype'] = $this->getStoreType();
         $data['rnd'] = time();
         $data['firmaadi'] = $this->getFirmName();
-        $data['Faturafirma'] = $this->getBillName();
         $data['tismi'] = $this->getDeliveryName();
         $data['islemtipi'] = $this->transactionType;
-        
+
         $data["Email"] = $this->getEmail();
         $data["Fadres"] = $this->getFadres();
         $data["Fadres2"] = $this->getFadres2();
@@ -60,7 +59,7 @@ abstract class AbstractPayment extends AbstractRequest
         $data["Fpostakodu"] = $this->getFpostakodu();
         $data["Fulkekodu"] = $this->getFulkekodu();
         $data["Fulke"] = $this->getFulke();
-        
+
         $data["NakliyeFirma"] = $this->getNakliyeFirma();
         $data["tismi"] = $this->getTismi();
         $data["tadres"] = $this->getTadres();
@@ -69,26 +68,47 @@ abstract class AbstractPayment extends AbstractRequest
         $data["til"] = $this->getTil();
         $data["tpostakodu"] = $this->getTpostakodu();
         $data["tulkekod"] = $this->getTulkekod();
-        $data["tulke"] = $this->getTulke();
         $data["tel"] = $this->getTel();
         $data["lang"] = $this->getLang();
+        $data["refreshtime"] = 3;
         $data["shipAddrState"] = $this->getShipAddrState();
         $data['taksit'] = null;
+        $data["hashAlgorithm"] = $this->getHashAlgorithm();
         if ($installment = $this->getInstallment()) {
             $data['taksit'] = $installment;
         }
+        $hash = null;
+        if ($this->getHashAlgorithm() == "ver3") {
+            $dataKeys = array_keys($data);
+            natcasesort($dataKeys);
+            $dataKeys = array_values($dataKeys);
+            $signature = [];
+            foreach ($dataKeys as $key) {
+                $escapedValue = str_replace("|", "\\|", str_replace("\\", "\\\\", $data[$key]));
 
-        $signature =    $data['clientid'].
-                        $data['oid'].
-                        $data['amount'].
-                        $data['okUrl'].
-                        $data['failUrl'].
-                        $data['islemtipi'].
-                        $data['taksit'].
-                        $data['rnd'].
-                        $this->getStoreKey();
-
-        $data['hash'] = base64_encode(pack('H*', sha1($signature)));
+                $lowerKey = strtolower($key);
+                if ($lowerKey != "hash" && $lowerKey != "encoding") {
+                    $signature[$key] = $escapedValue;
+                }
+            }
+            $signature["storekey"] = str_replace("|", "\\|", str_replace("\\", "\\\\", $this->getStoreKey()));
+            $hash = base64_encode(pack(
+                'H*',
+                hash('sha512', implode("|", $signature))
+            ));
+        } else {
+            $signature = $data['clientid'] .
+                $data['oid'] .
+                $data['amount'] .
+                $data['okUrl'] .
+                $data['failUrl'] .
+                $data['islemtipi'] .
+                $data['taksit'] .
+                $data['rnd'] .
+                $this->getStoreKey();
+            $hash = base64_encode(pack('H*', sha1($signature)));
+        }
+        $data['hash'] = $hash;
         return $data;
     }
 
@@ -97,171 +117,213 @@ abstract class AbstractPayment extends AbstractRequest
         return $this->response = new PaymentResponse($this, $data);
     }
 
-    public function getStoreType(){
+    public function getHashAlgorithm()
+    {
+        return $this->getParameter('hashAlgorithm');
+    }
+
+    public function setHashAlgorithm($value)
+    {
+        return $this->setParameter('hashAlgorithm', $value);
+    }
+
+    public function getStoreType()
+    {
         return $this->getParameter('storetype');
     }
-    
-    public function setStoreType($value){
-    	return $this->setParameter('storetype', $value);
+
+    public function setStoreType($value)
+    {
+        return $this->setParameter('storetype', $value);
     }
 
-    public function getEmail(){
+    public function getEmail()
+    {
         return $this->getParameter('Email');
     }
-    
-    public function setEmail($value){
-    	return $this->setParameter('Email', $value);
+
+    public function setEmail($value)
+    {
+        return $this->setParameter('Email', $value);
     }
 
-    public function getFadres(){
+    public function getFadres()
+    {
         return $this->getParameter('Fadres');
     }
-    
-    public function setFadres($value){
-    	return $this->setParameter('Fadres', $value);
+
+    public function setFadres($value)
+    {
+        return $this->setParameter('Fadres', $value);
     }
 
-    public function getFadres2(){
+    public function getFadres2()
+    {
         return $this->getParameter('Fadres2');
     }
-    
-    public function setFadres2($value){
-    	return $this->setParameter('Fadres2', $value);
+
+    public function setFadres2($value)
+    {
+        return $this->setParameter('Fadres2', $value);
     }
 
-    public function getFilce(){
+    public function getFilce()
+    {
         return $this->getParameter('Filce');
     }
-    
-    public function setFilce($value){
-    	return $this->setParameter('Filce', $value);
+
+    public function setFilce($value)
+    {
+        return $this->setParameter('Filce', $value);
     }
 
-    public function getFil(){
+    public function getFil()
+    {
         return $this->getParameter('Fil');
     }
-    
-    public function setFil($value){
-    	return $this->setParameter('Fil', $value);
+
+    public function setFil($value)
+    {
+        return $this->setParameter('Fil', $value);
     }
 
-    public function getFpostakodu(){
+    public function getFpostakodu()
+    {
         return $this->getParameter('Fpostakodu');
     }
-    
-    public function setFpostakodu($value){
-    	return $this->setParameter('Fpostakodu', $value);
+
+    public function setFpostakodu($value)
+    {
+        return $this->setParameter('Fpostakodu', $value);
     }
 
-    public function getFulkekodu(){
+    public function getFulkekodu()
+    {
         return $this->getParameter('Fulkekodu');
     }
-    
-    public function setFulkekodu($value){
-    	return $this->setParameter('Fulkekodu', $value);
+
+    public function setFulkekodu($value)
+    {
+        return $this->setParameter('Fulkekodu', $value);
     }
 
-    public function getFulke(){
+    public function getFulke()
+    {
         return $this->getParameter('Fulke');
     }
-    
-    public function setFulke($value){
-    	return $this->setParameter('Fulke', $value);
+
+    public function setFulke($value)
+    {
+        return $this->setParameter('Fulke', $value);
     }
 
-    public function getNakliyeFirma(){
+    public function getNakliyeFirma()
+    {
         return $this->getParameter('NakliyeFirma');
     }
-    
-    public function setNakliyeFirma($value){
-    	return $this->setParameter('NakliyeFirma', $value);
+
+    public function setNakliyeFirma($value)
+    {
+        return $this->setParameter('NakliyeFirma', $value);
     }
 
-    public function getTismi(){
+    public function getTismi()
+    {
         return $this->getParameter('tismi');
     }
-    
-    public function setTismi($value){
-    	return $this->setParameter('tismi', $value);
+
+    public function setTismi($value)
+    {
+        return $this->setParameter('tismi', $value);
     }
 
-    public function getTadres(){
+    public function getTadres()
+    {
         return $this->getParameter('tadres');
     }
-    
-    public function setTadres($value){
-    	return $this->setParameter('tadres', $value);
+
+    public function setTadres($value)
+    {
+        return $this->setParameter('tadres', $value);
     }
 
-    public function getTadres2(){
+    public function getTadres2()
+    {
         return $this->getParameter('tadres2');
     }
-    
-    public function setTadres2($value){
-    	return $this->setParameter('tadres2', $value);
+
+    public function setTadres2($value)
+    {
+        return $this->setParameter('tadres2', $value);
     }
 
-    public function getTilce(){
+    public function getTilce()
+    {
         return $this->getParameter('tilce');
     }
-    
-    public function setTilce($value){
-    	return $this->setParameter('tilce', $value);
+
+    public function setTilce($value)
+    {
+        return $this->setParameter('tilce', $value);
     }
 
-    public function getTil(){
+    public function getTil()
+    {
         return $this->getParameter('til');
     }
-    
-    public function setTil($value){
-    	return $this->setParameter('til', $value);
+
+    public function setTil($value)
+    {
+        return $this->setParameter('til', $value);
     }
 
-    public function getTpostakodu(){
+    public function getTpostakodu()
+    {
         return $this->getParameter('tpostakodu');
     }
-    
-    public function setTpostakodu($value){
-    	return $this->setParameter('tpostakodu', $value);
+
+    public function setTpostakodu($value)
+    {
+        return $this->setParameter('tpostakodu', $value);
     }
 
-    public function getTulkekod(){
+    public function getTulkekod()
+    {
         return $this->getParameter('tulkekod');
     }
-    
-    public function setTulkekod($value){
-    	return $this->setParameter('tulkekod', $value);
+
+    public function setTulkekod($value)
+    {
+        return $this->setParameter('tulkekod', $value);
     }
 
-    public function getTulke(){
-        return $this->getParameter('tulke');
-    }
-    
-    public function setTulke($value){
-    	return $this->setParameter('tulke', $value);
-    }
-
-    public function getTel(){
+    public function getTel()
+    {
         return $this->getParameter('tel');
     }
-    
-    public function setTel($value){
-    	return $this->setParameter('tel', $value);
+
+    public function setTel($value)
+    {
+        return $this->setParameter('tel', $value);
     }
 
-    public function getLang(){
+    public function getLang()
+    {
         return $this->getParameter('lang');
     }
-    
-    public function setLang($value){
-    	return $this->setParameter('lang', $value);
+
+    public function setLang($value)
+    {
+        return $this->setParameter('lang', $value);
     }
-    
-    public function getShipAddrState(){
+
+    public function getShipAddrState()
+    {
         return $this->getParameter('shipAddrState');
     }
-   
-    public function setShipAddrState($value){
+
+    public function setShipAddrState($value)
+    {
         return $this->setParameter('shipAddrState', $value);
     }
 }
