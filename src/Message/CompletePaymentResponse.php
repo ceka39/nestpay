@@ -6,6 +6,9 @@ use Omnipay\Common\Message\AbstractResponse;
 use Omnipay\Common\Message\RequestInterface;
 use Omnipay\Common\Exception\InvalidResponseException;
 
+/**
+ * @property CompletePaymentRequest $request
+ */
 class CompletePaymentResponse extends AbstractResponse
 {
 
@@ -19,7 +22,7 @@ class CompletePaymentResponse extends AbstractResponse
     }
 
     public function isSuccessful()
-    {   
+    {
         return in_array($this->data['mdStatus'], [1, 2, 3, 4]) && $this->data["Response"] === 'Approved';
     }
 
@@ -55,17 +58,41 @@ class CompletePaymentResponse extends AbstractResponse
 
     private function signHash()
     {
-        $hashParams = explode(':', $this->data['HASHPARAMS']);
-        $signature = "";
-        foreach ($hashParams as $parameter) {
-            if (isset($this->data[$parameter])) {
-                $signature .= $this->data[$parameter];
+        if ($this->data["hashAlgorithm"] == "ver3") {
+            $dataKeys = array_keys($this->data);
+            natcasesort($dataKeys);
+            $dataKeys = array_values($dataKeys);
+            $signature = [];
+            foreach ($dataKeys as $key) {
+                $escapedValue = str_replace("|", "\\|", str_replace("\\", "\\\\", $this->data[$key]));
+
+                $lowerKey = strtolower($key);
+                if ($lowerKey != "hash" && $lowerKey != "encoding") {
+                    $signature[$key] = $escapedValue;
+                }
             }
+            $signature["storekey"] = str_replace("|", "\\|", str_replace("\\", "\\\\", $this->request->getStoreKey()));
+            $generateHash = base64_encode(pack(
+                'H*',
+                hash('sha512', implode("|", $signature))
+            ));
+            if ($generateHash != $this->data["HASH"]) {
+                return false;
+            }
+            return true;
+        } else {
+            $hashParams = explode(':', $this->data['HASHPARAMS']);
+            $signature = "";
+            foreach ($hashParams as $parameter) {
+                if (isset($this->data[$parameter])) {
+                    $signature .= $this->data[$parameter];
+                }
+            }
+            $generateHash = base64_encode(pack('H*', sha1($signature . $this->request->getStoreKey())));
+            if ($signature != $this->data["HASHPARAMSVAL"] || $generateHash != $this->data["HASH"]) {
+                return false;
+            }
+            return true;
         }
-        $generateHash = base64_encode(pack('H*', sha1($signature . $this->request->getStoreKey())));
-        if ($signature != $this->data["HASHPARAMSVAL"] || $generateHash != $this->data["HASH"]) {
-            return false;
-        }
-        return true;
     }
 }
