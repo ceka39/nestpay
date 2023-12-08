@@ -19,22 +19,7 @@
             "Omnipay\\Nestpay\\": "src/"
         }
     },
-    "repositories": [
-        {
-            "type": "package",
-            "package": {
-                "name": "ceka39/nestpay",
-                "version": "master",
-                "source": {
-                    "url": "https://github.com/ceka39/nestpay.git",
-                    "type": "git",
-                    "reference": "master"
-                }
-            }
-        }
-    ],
     "require": {
-        "ceka39/nestpay": "master",
         "league/omnipay": "^3",
         "omnipay/paypal": "^3.0"
     }
