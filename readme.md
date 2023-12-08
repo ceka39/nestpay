@@ -17,13 +17,13 @@
  * ..
  
 ## Kurulum
-    composer require mstfsnc/nestpay
+    composer require ceka39/nestpay
     
 ## Kullanım
-[Wiki](https://github.com/mstfsnc/nestpay/wiki) sayfasını ziyaret edin
+[Wiki](https://github.com/ceka39/nestpay/wiki) sayfasını ziyaret edin
 
 ## Yardım
-[Issues](https://github.com/mstfsnc/nestpay/issues) sayfasından takip edebilirsiniz
+[Issues](https://github.com/ceka39/nestpay/issues) sayfasından takip edebilirsiniz
 
 ## Diğer Omnipay Paketleri
  * NestPay (CC5) https://github.com/yasinkuyu/omnipay-nestpay

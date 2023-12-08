@@ -16,6 +16,9 @@ abstract class AbstractPayment extends AbstractRequest
         'anadolubank' => 'https://anadolusanalpos.est.com.tr/servlet/est3Dgate',
         'test' => 'https://entegrasyon.asseco-see.com.tr/fim/est3Dgate',
         'cardplus' => 'https://sanalpos.card-plus.net/servlet/est3Dgate',
+        'ziraatbank' => 'https://sanalpos2.ziraatbank.com.tr/servlet/est3Dgate',
+        'kuveytturk' => 'https://kuveytturk.est.com.tr/servlet/est3Dgate',
+        'hsbc' => 'https://vpos.advantage.com.tr/servlet/est3Dgate'
     ];
 
     protected $allowedCardBrands = [

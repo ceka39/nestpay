@@ -1,17 +1,17 @@
 {
-    "name": "mstfsnc/nestpay",
+    "name": "ceka39/nestpay",
     "type": "library",
     "description": "Omnipay için Nestpay 3D_Pay kütüphanesi",
     "keywords": [
         "omnipay",
         "nestpay"
     ],
-    "homepage": "https://github.com/mstfsnc/nestpay",
+    "homepage": "https://github.com/ceka39/nestpay",
     "license": "MIT",
     "authors": [
         {
-            "name": "Mustafa Sancu",
-            "email": "mstfsnc@gmail.com"
+            "name": "Ceka 39",
+            "email": "ceka39@gmail.com"
         }
     ],
     "autoload": {
